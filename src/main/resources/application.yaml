@@ -1,0 +1,34 @@
+server:
+  port: 7777
+spring:
+  profiles:
+    active: test
+logging:
+  file:
+    name: ./logs/tvbox-mv.log
+  level:
+    .: error
+    org.spring.framework: debug
+    com.leosam: debug
+
+---
+server:
+  port: 7777
+spring:
+  config:
+    activate:
+      on-profile: test
+logging:
+  file:
+    name: ./logs/tvbox-mv.log
+
+---
+server:
+  port: 7777
+spring:
+  config:
+    activate:
+      on-profile: linux
+logging:
+  file:
+    name: /opt/logs/tvbox-mv.log
