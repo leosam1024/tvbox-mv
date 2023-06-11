@@ -2,6 +2,8 @@ package com.leosam.tvbox.mv.service;
 
 import com.leosam.tvbox.mv.data.MvContent;
 import com.leosam.tvbox.mv.data.MvResult;
+import com.leosam.tvbox.mv.data.Vod;
+import com.leosam.tvbox.mv.data.VodResult;
 import com.leosam.tvbox.mv.lucene.MvIndex;
 import com.leosam.tvbox.mv.lucene.MvSearcher;
 import com.leosam.tvbox.mv.utils.ClassPathReaderUtils;
@@ -15,12 +17,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -78,6 +85,34 @@ public class MvService implements InitializingBean {
         stopWatch.stop();
         logger.info("查询MV成功，query={}, 命中{}条, 返回={}条, 耗时{}毫秒", query, result.getTotalHits(), result.getList().size(), stopWatch.getTotalTimeMillis());
         return result;
+    }
+
+    public VodResult searchVod(String wd, int max) throws Exception {
+        MvResult search = search(wd, max);
+        if (CollectionUtils.isEmpty(search.getList())) {
+            return new VodResult();
+        }
+        Vod vod = new Vod();
+        vod.setVodId(wd);
+        vod.setVodName(wd);
+        vod.setVodPlayFrom("mv");
+        vod.setVodPic("http://m4.auto.itc.cn/auto/content/20230611/45d65d8a001f0c5aa008030f41c98666.jpeg");
+        List<String> playUrlList = new LinkedList<>();
+        Set<String> vodActorList = new LinkedHashSet<>();
+        for (MvContent content : search.getList()) {
+            playUrlList.add(content.getName() + "$" + content.getUrl());
+            if (vodActorList.size() < 5 && StringUtils.hasText(content.getSongUser())) {
+                vodActorList.add(content.getSongUser());
+            }
+        }
+        vod.setVodPlayUrl(String.join("#", playUrlList));
+        vod.setVodActor(String.join(",", vodActorList));
+
+        VodResult vodResult = new VodResult();
+        vodResult.init();
+        vodResult.setList(new ArrayList<>()).getList().add(vod);
+        // logger.debug("searchVod , wd{}, vodResult={}", wd, JsonUtils.writeValue(vodResult));
+        return vodResult;
     }
 
     @Override
@@ -151,4 +186,6 @@ public class MvService implements InitializingBean {
         stopWatch.stop();
         logger.info("重建索引中....完成,耗时 {} 毫秒, 索引位置：{}", stopWatch.getTotalTimeMillis(), file.getPath());
     }
+
+
 }
