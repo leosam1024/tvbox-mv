@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 不输出logback 初始化日志  -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
+    <property name="ENCODING" value="utf-8" />
+    <property name="PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg %n"/>
+    <property name="PATTERN-COLOR" value="%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %highlight(%-5level) %green(%logger{36}) - %highlight(%msg) %n"/>
+
+    <!-- 控制台输出 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 控制台输出-带颜色 -->
+    <appender name="CONSOLE-WITH-COLOR" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- 根据操作环境设置编码器 -->
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <!-- 设置控制台输出编码 -->
+            <charset>${ENCODING}</charset>
+        </encoder>
+        <if condition=' !property("java.class.path").contains("SNAPSHOT") || property("jboss.modules.system.pkgs").contains("intellij")'>
+            <then>
+                <!-- 控制台输出-带颜色 -->
+                <encoder>
+                    <pattern>${PATTERN-COLOR}</pattern>
+                    <withJansi>true</withJansi>
+                </encoder>
+            </then>
+            <else>
+                <!-- 控制台输出-不带颜色 -->
+                <encoder>
+                    <pattern>${PATTERN}</pattern>
+                    <withJansi>true</withJansi>
+                </encoder>
+            </else>
+        </if>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>./logs/run.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 日志保存7天 -->
+            <maxHistory>7</maxHistory>
+            <fileNamePattern>./logs/run.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+    </appender>
+    <logger name="io.vertx" level="INFO"/>
+    <logger name="io.netty" level="INFO"/>
+
+    <root level="DEBUG">
+        <appender-ref ref="CONSOLE-WITH-COLOR" />
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>

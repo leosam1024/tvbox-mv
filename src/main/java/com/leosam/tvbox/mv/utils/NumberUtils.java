@@ -7,7 +7,7 @@ package com.leosam.tvbox.mv.utils;
 public class NumberUtils {
 
     public static int toInt(final String str, final int defaultValue) {
-        if (str == null) {
+        if (str == null || str.length() == 0) {
             return defaultValue;
         }
         try {

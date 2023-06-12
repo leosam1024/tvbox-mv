@@ -1,0 +1,13 @@
+{
+  "sites": [
+    {
+      "key": "MV_vod",
+      "name": "👀┃MV┃视频",
+      "type": 1,
+      "api": "http://192.168.31.253:7777/mv/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    }
+  ]
+}

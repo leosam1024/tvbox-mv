@@ -7,6 +7,9 @@ import com.leosam.tvbox.mv.data.VodResult;
 import com.leosam.tvbox.mv.lucene.MvIndex;
 import com.leosam.tvbox.mv.lucene.MvSearcher;
 import com.leosam.tvbox.mv.utils.ClassPathReaderUtils;
+import com.leosam.tvbox.mv.utils.CollectionUtils;
+import com.leosam.tvbox.mv.utils.StopWatch;
+import com.leosam.tvbox.mv.utils.StringUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -15,14 +18,10 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StopWatch;
-import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -34,16 +33,16 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author admin
  * @since 2023/6/10 17:35
  */
-@Service
-public class MvService implements InitializingBean {
+public class MvService {
     private static final Logger logger = LoggerFactory.getLogger(MvService.class);
 
     private static final String indexDirectoryPath = "index";
+    private static final String MV_FILE = "tvbox/16wMV.txt";
 
     private MvSearcher mvSearcher;
 
     public MvResult search(String query, int max) throws Exception {
-        if (!StringUtils.hasText(query)) {
+        if (StringUtils.isEmpty(query) || mvSearcher == null) {
             return new MvResult();
         }
 
@@ -55,7 +54,7 @@ public class MvService implements InitializingBean {
         MvResult result = new MvResult();
         result.setQuery(query);
         result.setTotalHits(topDocs.totalHits.value);
-        result.setList(new LinkedList<>());
+        result.setList(new ArrayList<>(topDocs.scoreDocs.length));
         for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
             Document document = mvSearcher.getDocument(scoreDoc.doc);
             if (document == null) {
@@ -66,8 +65,9 @@ public class MvService implements InitializingBean {
             String songName = name;
             String songUser = null;
             if (name.contains("-")) {
-                songUser = name.split("-", 2)[0];
-                songName = name.split("-", 2)[1];
+                String[] split = name.split("-", 2);
+                songUser = split[0];
+                songName = split[1];
             }
             String url = document.get("url");
             if (!url.startsWith("http")) {
@@ -96,12 +96,13 @@ public class MvService implements InitializingBean {
         vod.setVodId(wd);
         vod.setVodName(wd);
         vod.setVodPlayFrom("mv");
-        vod.setVodPic("http://m4.auto.itc.cn/auto/content/20230611/45d65d8a001f0c5aa008030f41c98666.jpeg");
+        vod.setVodPic("http://yanxuan.nosdn.127.net/b6fb987ce79f308949e44f5129a4b51c.jpeg");
+        // vod.setVodPic("http://m4.auto.itc.cn/auto/content/20230611/45d65d8a001f0c5aa008030f41c98666.jpeg");
         List<String> playUrlList = new LinkedList<>();
         Set<String> vodActorList = new LinkedHashSet<>();
         for (MvContent content : search.getList()) {
             playUrlList.add(content.getName() + "$" + content.getUrl());
-            if (vodActorList.size() < 5 && StringUtils.hasText(content.getSongUser())) {
+            if (vodActorList.size() < 5 && StringUtils.isNotEmpty(content.getSongUser())) {
                 vodActorList.add(content.getSongUser());
             }
         }
@@ -115,8 +116,8 @@ public class MvService implements InitializingBean {
         return vodResult;
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
+    public void initIndex() throws Exception {
+
         // 重建索引
         String indexAbsolutePath = new File(indexDirectoryPath).getAbsoluteFile().getAbsolutePath();
         reBuildIndex(indexAbsolutePath);
@@ -130,13 +131,22 @@ public class MvService implements InitializingBean {
 
 
     private static void reBuildIndex(String indexDirectoryPath) throws IOException {
+        File file = new File(indexDirectoryPath).getAbsoluteFile();
+        int mvFileSize = ClassPathReaderUtils.getSize(MV_FILE);
+        File mvFileSizeTxt = Path.of(file.getAbsolutePath(), "" + mvFileSize + ".txt").toFile();
+        if (mvFileSizeTxt.exists()) {
+            logger.info("{}已经索引, 跳过索引", MV_FILE);
+            return;
+        }
+
+
         StopWatch stopWatch = new StopWatch();
         logger.info("重建索引中....");
 
         // 清空以前的索引
         stopWatch.start("清空以前索引");
         logger.info("清空历史索引....");
-        File file = new File(indexDirectoryPath).getAbsoluteFile();
+
         if (file.isDirectory()) {
             File[] files = file.listFiles();
             for (File file1 : files) {
@@ -152,7 +162,7 @@ public class MvService implements InitializingBean {
         logger.info("创建索引中....");
         AtomicInteger line = new AtomicInteger();
         MvIndex mvIndex = new MvIndex(indexDirectoryPath);
-        ClassPathReaderUtils.getBufferedReader("tvbox/16wMV.txt").lines()
+        ClassPathReaderUtils.getBufferedReader(MV_FILE).lines()
                 .filter(l -> l.contains(",h"))
                 .filter(l -> l.contains("-"))
                 .forEach(l -> {
@@ -182,6 +192,7 @@ public class MvService implements InitializingBean {
                     }
                 });
         mvIndex.close();
+        mvFileSizeTxt.createNewFile();
         logger.info("创建索引中....完成, 总共{}条", line.get());
         stopWatch.stop();
         logger.info("重建索引中....完成,耗时 {} 毫秒, 索引位置：{}", stopWatch.getTotalTimeMillis(), file.getPath());
