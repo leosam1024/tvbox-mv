@@ -91,3 +91,6 @@ maxCount：最大返回值，返回结果里面 list 最大数量。 最大值10
 小武哥 ：https://t.me/BoBaiBroo
 
 直播文件：https://t.me/fongmi_offical/54024/244800
+
+### 声明
+仅供学习交流，严禁用于商业用途，请于24小时内删除。

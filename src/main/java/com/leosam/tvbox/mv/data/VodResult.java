@@ -1,5 +1,7 @@
 package com.leosam.tvbox.mv.data;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 /**
@@ -14,6 +16,8 @@ public class VodResult {
     private int limit;
     private int total;
     private List<Vod> list;
+    @JsonProperty("class")
+    private List<VodClass> vodClassList;
 
     public void init() {
         this.code = 1;
@@ -74,6 +78,15 @@ public class VodResult {
 
     public VodResult setList(List<Vod> list) {
         this.list = list;
+        return this;
+    }
+
+    public List<VodClass> getVodClassList() {
+        return vodClassList;
+    }
+
+    public VodResult setVodClassList(List<VodClass> vodClassList) {
+        this.vodClassList = vodClassList;
         return this;
     }
 }

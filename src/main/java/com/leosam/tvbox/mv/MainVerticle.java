@@ -13,6 +13,7 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.StaticHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,8 @@ public class MainVerticle extends AbstractVerticle {
     Router router = Router.router(vertx);
     router.route("/mv/search").handler(this::searchMv);
     router.route("/mv/vod").handler(this::searchMvVod);
-    router.route().handler(req -> req.response().putHeader("content-type", "text/plain").end("Hello from Vert.x!"));
+    router.route("/*").handler(StaticHandler.create("static"));
+    router.route().handler(this::home);
     httpServer.requestHandler(router);
 
     httpServer.listen(7777, http -> {
@@ -66,21 +68,36 @@ public class MainVerticle extends AbstractVerticle {
     port = httpServer.actualPort();
   }
 
+  /**
+   * 参考 <a href="https://github.com/FongMi/TV/blob/release/app/src/main/java/com/fongmi/android/tv/model/SiteViewModel.java#L32">...</a>
+   * @param req
+   */
   private void searchMvVod(RoutingContext req) {
     // 获取参数
     String wd = VertxUtils.queryParam(req, "wd");
-    String ac = VertxUtils.queryParam(req, "ac");
     String ids = VertxUtils.queryParam(req, "ids");
-    String maxCount = VertxUtils.queryParam(req, "maxCount");
-    int max = Math.min(Math.max(NumberUtils.toInt(maxCount, 100), 10), 1000);
     String query = StringUtils.isNotEmpty(wd) ? wd : ids;
+    String ac = VertxUtils.queryParam(req, "ac");
+    String type = VertxUtils.queryParam(req, "t");
+    //query = StringUtils.isNotEmpty(query) ? query : "我";
+    String maxCount = VertxUtils.queryParam(req, "maxCount");
+    int max = Math.min(Math.max(NumberUtils.toInt(maxCount, 200), 10), 1000);
+    String pg = VertxUtils.queryParam(req, "pg");
+    int page = NumberUtils.toInt(pg, 0);
 
     // 处理结果
     VodResult vodResult = null;
     try {
-      if (mvService != null) {
+      // 搜索
+      if (mvService != null && StringUtils.isNotEmpty(query) && page <= 0) {
         vodResult = mvService.searchVod(query, max);
       }
+
+      // 首页
+      if (mvService != null && StringUtils.isEmpty(query)) {
+        vodResult = mvService.searchVodHome(type, page);
+      }
+
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -95,8 +112,10 @@ public class MainVerticle extends AbstractVerticle {
   private void searchMv(RoutingContext req) {
     // 获取参数
     String query = VertxUtils.queryParam(req, "query");
+    String wd = VertxUtils.queryParam(req, "wd");
+    query = StringUtils.isNotEmpty(query) ? query : wd;
     String maxCount = VertxUtils.queryParam(req, "maxCount");
-    int max = Math.min(Math.max(NumberUtils.toInt(maxCount, 100), 10), 1000);
+    int max = Math.min(Math.max(NumberUtils.toInt(maxCount, 200), 10), 1000);
 
     // 处理结果
     MvResult search = null;
@@ -113,6 +132,12 @@ public class MainVerticle extends AbstractVerticle {
     req.response()
             .putHeader("content-type", "application/json")
             .end(jsonString);
+  }
+
+  private void home(RoutingContext req) {
+    req.response()
+            .putHeader("content-type", "text/plain;charset=utf-8")
+            .end("MV搜索服务\n源码网址：https://github.com/leosam1024/tvbox-mv");
   }
 
 

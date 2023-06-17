@@ -1,8 +1,11 @@
 package com.leosam.tvbox.mv.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leosam.tvbox.mv.data.MvContent;
 import com.leosam.tvbox.mv.data.MvResult;
 import com.leosam.tvbox.mv.data.Vod;
+import com.leosam.tvbox.mv.data.VodClass;
 import com.leosam.tvbox.mv.data.VodResult;
 import com.leosam.tvbox.mv.lucene.MvIndex;
 import com.leosam.tvbox.mv.lucene.MvSearcher;
@@ -23,9 +26,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -35,9 +41,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class MvService {
     private static final Logger logger = LoggerFactory.getLogger(MvService.class);
-
     private static final String indexDirectoryPath = "index";
     private static final String MV_FILE = "tvbox/16wMV.txt";
+    private static final Map<String, List<String>> homeConfigMap = new LinkedHashMap<>();
+    private static final String HOME_KEY = "HOME";
+    /**
+     * 最低相似分数
+     */
+    private static final float MIN_QUERY_SCORE = 3.0F;
 
     private MvSearcher mvSearcher;
 
@@ -56,6 +67,10 @@ public class MvService {
         result.setTotalHits(topDocs.totalHits.value);
         result.setList(new ArrayList<>(topDocs.scoreDocs.length));
         for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+            // 分数太低 忽略
+            if(scoreDoc.score < MIN_QUERY_SCORE){
+                break;
+            }
             Document document = mvSearcher.getDocument(scoreDoc.doc);
             if (document == null) {
                 continue;
@@ -97,7 +112,6 @@ public class MvService {
         vod.setVodName(wd);
         vod.setVodPlayFrom("mv");
         vod.setVodPic("http://yanxuan.nosdn.127.net/b6fb987ce79f308949e44f5129a4b51c.jpeg");
-        // vod.setVodPic("http://m4.auto.itc.cn/auto/content/20230611/45d65d8a001f0c5aa008030f41c98666.jpeg");
         List<String> playUrlList = new LinkedList<>();
         Set<String> vodActorList = new LinkedHashSet<>();
         for (MvContent content : search.getList()) {
@@ -116,7 +130,51 @@ public class MvService {
         return vodResult;
     }
 
+    public VodResult searchVodHome(String type, int page) throws Exception {
+        if (page > 1) {
+            return new VodResult();
+        }
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        VodResult vodResult = new VodResult();
+        vodResult.init();
+        vodResult.setList(new ArrayList<>()).getList();
+
+        // 分类
+        if (StringUtils.isEmpty(type)) {
+            vodResult.setVodClassList(new ArrayList<>(homeConfigMap.size()));
+            Set<String> keySet = homeConfigMap.keySet();
+            for (String key : keySet) {
+                if (HOME_KEY.equalsIgnoreCase(key)) {
+                    continue;
+                }
+                VodClass vodClass = new VodClass().setTypeId(key).setTypeName(key);
+                vodResult.getVodClassList().add(vodClass);
+            }
+        }
+
+        // 首页mv推荐
+        String thisType = StringUtils.isNotEmpty(type) ? type : HOME_KEY;
+        List<String> geshouList = homeConfigMap.getOrDefault(thisType, new ArrayList<>());
+        for (String geshou : geshouList) {
+            Vod vod = new Vod();
+            vod.setVodId(geshou);
+            vod.setVodName(geshou);
+            vod.setVodPlayFrom("mv");
+            vod.setVodPic("http://yanxuan.nosdn.127.net/b6fb987ce79f308949e44f5129a4b51c.jpeg");
+            vodResult.getList().add(vod);
+        }
+
+        stopWatch.stop();
+        logger.info("加载首页成功，类型={}, 返回={}条, 耗时{}毫秒", thisType, vodResult.getList().size(), stopWatch.getTotalTimeMillis());
+        return vodResult;
+    }
+
     public void initIndex() throws Exception {
+        // 加载首页配置
+        buildHomeConfig();
 
         // 重建索引
         String indexAbsolutePath = new File(indexDirectoryPath).getAbsoluteFile().getAbsolutePath();
@@ -129,6 +187,17 @@ public class MvService {
         search("五月天", 10);
     }
 
+    private void buildHomeConfig() {
+        try {
+            String content = ClassPathReaderUtils.getContent("tvbox/home.json");
+            Map<String, List<String>> map = new ObjectMapper().readValue(content, new TypeReference<HashMap<String, List<String>>>() {
+            });
+            homeConfigMap.putAll(map);
+            logger.info("加载首页配置成功");
+        } catch (Exception e) {
+            logger.error("buildHomeConfig error", e);
+        }
+    }
 
     private static void reBuildIndex(String indexDirectoryPath) throws IOException {
         File file = new File(indexDirectoryPath).getAbsoluteFile();
