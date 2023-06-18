@@ -44,6 +44,7 @@ public class MvService {
     private static final String indexDirectoryPath = "index";
     private static final String MV_FILE = "tvbox/16wMV.txt";
     private static final Map<String, List<String>> homeConfigMap = new LinkedHashMap<>();
+    private static final Map<String, String> singerMap = new LinkedHashMap<>();
     private static final String HOME_KEY = "HOME";
     /**
      * 最低相似分数
@@ -68,7 +69,7 @@ public class MvService {
         result.setList(new ArrayList<>(topDocs.scoreDocs.length));
         for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
             // 分数太低 忽略
-            if(scoreDoc.score < MIN_QUERY_SCORE){
+            if (scoreDoc.score < MIN_QUERY_SCORE) {
                 break;
             }
             Document document = mvSearcher.getDocument(scoreDoc.doc);
@@ -111,7 +112,7 @@ public class MvService {
         vod.setVodId(wd);
         vod.setVodName(wd);
         vod.setVodPlayFrom("mv");
-        vod.setVodPic("http://yanxuan.nosdn.127.net/b6fb987ce79f308949e44f5129a4b51c.jpeg");
+        vod.setVodPic(getVodPic(wd));
         List<String> playUrlList = new LinkedList<>();
         Set<String> vodActorList = new LinkedHashSet<>();
         for (MvContent content : search.getList()) {
@@ -126,7 +127,6 @@ public class MvService {
         VodResult vodResult = new VodResult();
         vodResult.init();
         vodResult.setList(new ArrayList<>()).getList().add(vod);
-        // logger.debug("searchVod , wd{}, vodResult={}", wd, JsonUtils.writeValue(vodResult));
         return vodResult;
     }
 
@@ -163,13 +163,29 @@ public class MvService {
             vod.setVodId(geshou);
             vod.setVodName(geshou);
             vod.setVodPlayFrom("mv");
-            vod.setVodPic("http://yanxuan.nosdn.127.net/b6fb987ce79f308949e44f5129a4b51c.jpeg");
+            vod.setVodPic(getVodPic(geshou));
             vodResult.getList().add(vod);
         }
 
         stopWatch.stop();
         logger.info("加载首页成功，类型={}, 返回={}条, 耗时{}毫秒", thisType, vodResult.getList().size(), stopWatch.getTotalTimeMillis());
         return vodResult;
+    }
+
+    private String getVodPic(String vodName) {
+        String vodPic = null;
+        if (StringUtils.isEmpty(vodName)) {
+            vodPic = "http://yanxuan.nosdn.127.net/b6fb987ce79f308949e44f5129a4b51c.jpeg";
+        } else if (singerMap.containsKey(vodName)) {
+            vodPic = singerMap.get(vodName);
+        } else if (vodName.contains(",")) {
+            String[] split = vodName.split(",", 2);
+            if (singerMap.containsKey(split[0])) {
+                vodPic = singerMap.get(split[0]);
+            }
+        }
+        vodPic = StringUtils.isEmpty(vodPic) ? "http://yanxuan.nosdn.127.net/b6fb987ce79f308949e44f5129a4b51c.jpeg" : vodPic;
+        return vodPic;
     }
 
     public void initIndex() throws Exception {
@@ -188,6 +204,7 @@ public class MvService {
     }
 
     private void buildHomeConfig() {
+        // 首页配置
         try {
             String content = ClassPathReaderUtils.getContent("tvbox/home.json");
             Map<String, List<String>> map = new ObjectMapper().readValue(content, new TypeReference<HashMap<String, List<String>>>() {
@@ -197,6 +214,17 @@ public class MvService {
         } catch (Exception e) {
             logger.error("buildHomeConfig error", e);
         }
+        // 歌手详情配置
+        try {
+            String content = ClassPathReaderUtils.getContent("tvbox/singerPic.json");
+            Map<String, String> map = new ObjectMapper().readValue(content, new TypeReference<HashMap<String, String>>() {
+            });
+            singerMap.putAll(map);
+            logger.info("加载歌手头像成功");
+        } catch (Exception e) {
+            logger.error("buildHomeConfig error", e);
+        }
+
     }
 
     private static void reBuildIndex(String indexDirectoryPath) throws IOException {
