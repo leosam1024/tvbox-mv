@@ -19,12 +19,13 @@ public class VodResult {
     @JsonProperty("class")
     private List<VodClass> vodClassList;
 
-    public void init() {
+    public VodResult init() {
         this.code = 1;
         this.page = 1;
         this.pagecount = 1;
         this.limit = 1;
         this.total = 1;
+        return this;
     }
 
     public int getCode() {

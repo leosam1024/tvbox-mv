@@ -131,6 +131,7 @@ public class MvService {
     }
 
     public VodResult searchVodHome(String type, int page) throws Exception {
+        // 防止分页请求
         if (page > 1) {
             return new VodResult();
         }
@@ -138,32 +139,31 @@ public class MvService {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        VodResult vodResult = new VodResult();
-        vodResult.init();
-        vodResult.setList(new ArrayList<>()).getList();
+        VodResult vodResult = new VodResult().init();
 
         // 分类
         if (StringUtils.isEmpty(type)) {
             vodResult.setVodClassList(new ArrayList<>(homeConfigMap.size()));
             Set<String> keySet = homeConfigMap.keySet();
             for (String key : keySet) {
-                if (HOME_KEY.equalsIgnoreCase(key)) {
-                    continue;
-                }
                 VodClass vodClass = new VodClass().setTypeId(key).setTypeName(key);
+                if (HOME_KEY.equalsIgnoreCase(key)) {
+                    vodClass.setTypeName("热门");
+                }
                 vodResult.getVodClassList().add(vodClass);
             }
         }
 
         // 首页mv推荐
         String thisType = StringUtils.isNotEmpty(type) ? type : HOME_KEY;
-        List<String> geshouList = homeConfigMap.getOrDefault(thisType, new ArrayList<>());
-        for (String geshou : geshouList) {
+        List<String> singerList = homeConfigMap.getOrDefault(thisType, new ArrayList<>());
+        vodResult.setList(new ArrayList<>(singerList.size()));
+        for (String singer : singerList) {
             Vod vod = new Vod();
-            vod.setVodId(geshou);
-            vod.setVodName(geshou);
+            vod.setVodId(singer);
+            vod.setVodName(singer);
             vod.setVodPlayFrom("mv");
-            vod.setVodPic(getVodPic(geshou));
+            vod.setVodPic(getVodPic(singer));
             vodResult.getList().add(vod);
         }
 
@@ -184,7 +184,7 @@ public class MvService {
                 vodPic = singerMap.get(split[0]);
             }
         }
-        vodPic = StringUtils.isEmpty(vodPic) ? "http://yanxuan.nosdn.127.net/b6fb987ce79f308949e44f5129a4b51c.jpeg" : vodPic;
+        vodPic = StringUtils.isNotEmpty(vodPic) ? vodPic : "http://yanxuan.nosdn.127.net/b6fb987ce79f308949e44f5129a4b51c.jpeg";
         return vodPic;
     }
 
@@ -207,7 +207,7 @@ public class MvService {
         // 首页配置
         try {
             String content = ClassPathReaderUtils.getContent("tvbox/home.json");
-            Map<String, List<String>> map = new ObjectMapper().readValue(content, new TypeReference<HashMap<String, List<String>>>() {
+            Map<String, List<String>> map = new ObjectMapper().readValue(content, new TypeReference<LinkedHashMap<String, List<String>>>() {
             });
             homeConfigMap.putAll(map);
             logger.info("加载首页配置成功");
@@ -217,7 +217,7 @@ public class MvService {
         // 歌手详情配置
         try {
             String content = ClassPathReaderUtils.getContent("tvbox/singerPic.json");
-            Map<String, String> map = new ObjectMapper().readValue(content, new TypeReference<HashMap<String, String>>() {
+            Map<String, String> map = new ObjectMapper().readValue(content, new TypeReference<LinkedHashMap<String, String>>() {
             });
             singerMap.putAll(map);
             logger.info("加载歌手头像成功");
