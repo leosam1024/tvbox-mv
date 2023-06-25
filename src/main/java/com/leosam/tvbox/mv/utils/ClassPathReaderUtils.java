@@ -45,6 +45,7 @@ public class ClassPathReaderUtils {
     }
 
     public static String extractFileNameWithoutExtension(String filePath) {
+        filePath = filePath.replace(CLASS_PATH_PREFIX, "");
         Path path = Paths.get(filePath);
         String fileNameWithExtension = path.getFileName().toString();
         int lastDotIndex = fileNameWithExtension.lastIndexOf(".");
