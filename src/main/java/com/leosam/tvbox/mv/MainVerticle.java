@@ -53,6 +53,8 @@ public class MainVerticle extends AbstractVerticle {
     Router router = Router.router(vertx);
     router.route("/mv/search").handler(this::searchMv);
     router.route("/mv/vod").handler(this::searchMvVod);
+    router.route("/vod").handler(this::searchVod);
+    router.route("/vod/:index").handler(this::searchVod);
     router.route("/*").handler(StaticHandler.create("static"));
     router.route().handler(this::home);
     httpServer.requestHandler(router);
@@ -63,39 +65,52 @@ public class MainVerticle extends AbstractVerticle {
         logger.info("HTTP server started on port 7777");
       } else {
         startPromise.fail(http.cause());
+        logger.info("HTTP server fail, on port 7777, 启动失败，更换端口重试", http.cause());
       }
     });
     port = httpServer.actualPort();
+  }
+
+  private void searchMvVod(RoutingContext req) {
+    searchVod(req, MvService.MV_FILE_NAME);
+  }
+
+  private void searchVod(RoutingContext req) {
+    searchVod(req, StringUtils.EMPTY);
   }
 
   /**
    * 参考 <a href="https://github.com/FongMi/TV/blob/release/app/src/main/java/com/fongmi/android/tv/model/SiteViewModel.java#L32">...</a>
    * @param req
    */
-  private void searchMvVod(RoutingContext req) {
+  private void searchVod(RoutingContext req, String index) {
     // 获取参数
     String wd = VertxUtils.queryParam(req, "wd");
     String ids = VertxUtils.queryParam(req, "ids");
-    String query = StringUtils.isNotEmpty(wd) ? wd : ids;
+    String query = StringUtils.trimToEmpty(StringUtils.defaultIfEmpty(wd, ids));
     String ac = VertxUtils.queryParam(req, "ac");
     String type = VertxUtils.queryParam(req, "t");
-    //query = StringUtils.isNotEmpty(query) ? query : "我";
     String maxCount = VertxUtils.queryParam(req, "maxCount");
     int max = Math.min(Math.max(NumberUtils.toInt(maxCount, 200), 10), 1000);
     String pg = VertxUtils.queryParam(req, "pg");
     int page = NumberUtils.toInt(pg, 0);
+    if(StringUtils.isEmpty(index)){
+      String pathIndex = req.pathParam("index");
+      String queryIndex = VertxUtils.queryParam(req, "index");
+      index = StringUtils.trimToEmpty(StringUtils.defaultIfEmpty(pathIndex, queryIndex));
+    }
 
     // 处理结果
     VodResult vodResult = null;
     try {
       // 搜索
       if (mvService != null && StringUtils.isNotEmpty(query) && page <= 0) {
-        vodResult = mvService.searchVod(query, max);
+        vodResult = mvService.searchVod(index, query, max);
       }
 
       // 首页
       if (mvService != null && StringUtils.isEmpty(query)) {
-        vodResult = mvService.searchVodHome(type, page);
+        vodResult = mvService.searchVodHome(index, type, page);
       }
 
     } catch (Exception e) {
@@ -121,7 +136,7 @@ public class MainVerticle extends AbstractVerticle {
     MvResult search = null;
     try {
       if (mvService != null) {
-        search = mvService.search(query, max);
+        search = mvService.search(null, query, max);
       }
     } catch (Exception e) {
       throw new RuntimeException(e);

@@ -5,8 +5,8 @@
     <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
 
     <property name="ENCODING" value="utf-8" />
-    <property name="PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg %n"/>
-    <property name="PATTERN-COLOR" value="%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %highlight(%-5level) %green(%logger{36}) - %highlight(%msg) %n"/>
+    <property name="PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS, GMT+8} [%thread] %-5level %logger{36} - %msg %n"/>
+    <property name="PATTERN-COLOR" value="%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS, GMT+8}) [%thread] %highlight(%-5level) %green(%logger{36}) - %highlight(%msg) %n"/>
 
     <!-- 控制台输出 -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">

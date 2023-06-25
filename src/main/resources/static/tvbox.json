@@ -8,6 +8,14 @@
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1
+    }, {
+      "key": "MV_vod_2",
+      "name": "👀┃DOME┃视频",
+      "type": 1,
+      "api": "./vod/dome",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
     }
   ]
 }

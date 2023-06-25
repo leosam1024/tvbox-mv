@@ -3,8 +3,10 @@ mv视频搜索服务
 
 # 请求接口
 
-## Vod搜索接口
+## MV视频Vod搜索接口
 http://localhost:7777/mv/vod?maxCount=100&wd=五月天后来的我们
+
+该接口只请求MV视频    
 
 请求参数定义
 ~~~
@@ -31,8 +33,34 @@ maxCount：最大返回值，返回结果里面 list 最大数量。 最大值10
 }
 ~~~
 
+## 自定义数据源-Vod搜索接口
+http://localhost:7777/vod/:index?maxCount=100&wd=五月天后来的我们
 
-## 搜素接口
+### 使用方法
+1. 在`jar`所在文件目录下创建`data`文件夹
+2. 将自定义数据源文件放入`data`文件夹下
+3. 自定义数据源名称为数据源文件名，如`dome.json`，则数据源名称为`dome`
+4. 自定义数据源文件格式如下： `视频名称,视频链接`
+4. 请求接口`http://localhost:7777/vod/dome?maxCount=100&wd=五月天后来的我们`
+
+请求路径参数定义
+~~~
+:index ：数据源名称，如：dome，不带文件后缀
+~~~
+
+请求参数定义
+~~~
+wd ：搜索值，mv名称或者歌手名 都可以
+ids ：vodId,同wd
+maxCount：最大返回值，返回结果里面 list 最大数量。 最大值1000
+~~~
+返回参数结果
+~~~
+同上
+~~~
+
+
+## MV视频搜素接口
 http://localhost:7777/mv/search?maxCount=100&query=五月天后来的我们
 
 请求参数定义
@@ -78,6 +106,14 @@ maxCount：最大返回值，返回结果里面 list 最大数量。 最大值10
       "name": "👀┃MV┃视频",
       "type": 1,
       "api": "http://你自己域名:7777/mv/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    }, {
+      "key": "MV_vod_DOME",
+      "name": "👀┃DOME┃视频",
+      "type": 1,
+      "api": "http://你自己域名:7777/dome",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1
