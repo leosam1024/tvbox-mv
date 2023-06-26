@@ -88,6 +88,7 @@ public class MainVerticle extends AbstractVerticle {
     String wd = VertxUtils.queryParam(req, "wd");
     String ids = VertxUtils.queryParam(req, "ids");
     String query = StringUtils.trimToEmpty(StringUtils.defaultIfEmpty(wd, ids));
+    query = StringUtils.cleanString(query);
     String ac = VertxUtils.queryParam(req, "ac");
     String type = VertxUtils.queryParam(req, "t");
     String maxCount = VertxUtils.queryParam(req, "maxCount");
@@ -114,7 +115,7 @@ public class MainVerticle extends AbstractVerticle {
       }
 
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      logger.error("searchVod fail, index={}, query={}, page={} ", index, query, page, e);
     }
 
     // 返回数据
@@ -129,6 +130,7 @@ public class MainVerticle extends AbstractVerticle {
     String query = VertxUtils.queryParam(req, "query");
     String wd = VertxUtils.queryParam(req, "wd");
     query = StringUtils.isNotEmpty(query) ? query : wd;
+    query = StringUtils.cleanString(query);
     String maxCount = VertxUtils.queryParam(req, "maxCount");
     int max = Math.min(Math.max(NumberUtils.toInt(maxCount, 200), 10), 1000);
 
@@ -139,7 +141,7 @@ public class MainVerticle extends AbstractVerticle {
         search = mvService.search(null, query, max);
       }
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      logger.error("searchMv fail, query={}, maxCount={} ", query, maxCount, e);
     }
 
     // 返回数据

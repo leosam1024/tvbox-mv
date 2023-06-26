@@ -44,4 +44,12 @@ public class StringUtils {
         return result;
     }
 
+    public static String cleanString(String s){
+        s = s .replace('（','(')
+                .replace('）',')')
+                .replace('/','_')
+                ;
+        return s;
+    }
+
 }
