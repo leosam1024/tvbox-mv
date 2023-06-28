@@ -16,6 +16,24 @@
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1
+    },{
+
+      "key": "live2tv",
+      "name": "直播转点播",
+      "type": 4,
+      "api": "./vod?sites=Live2TV&siteUrl=https://qu.ax/HtMB.txt",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },    {
+      "key": "探探",
+      "name": "探探┃App",
+      "type": 4,
+      "api": "./vod?sites=XiaoGui&siteUrl=http://liling.lfytyl.com$$$/api.php/app/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+
     }
   ]
 }
