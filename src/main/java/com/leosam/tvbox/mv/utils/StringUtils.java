@@ -1,5 +1,6 @@
 package com.leosam.tvbox.mv.utils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,11 +45,26 @@ public class StringUtils {
         return result;
     }
 
-    public static String cleanString(String s){
-        s = s .replace('（','(')
-                .replace('）',')')
-                .replace('/','_')
-                ;
+    public static String cleanString(String s) {
+        s = s.replace('（', '(')
+                .replace('）', ')')
+                .replace('/', '_')
+                .replace(']', '_')
+        ;
+        // 去除乱码 以ISO8859-1方式读取UTF-8编码的中文
+        if (s.contains("ç") ||
+                s.contains("å") ||
+                s.contains("ğ") ||
+                s.contains("è") ||
+                s.contains("â") ||
+                s.contains("Š") ||
+                s.contains("ã") ||
+                s.contains("é") ||
+                s.contains("æ") ||
+                s.contains("§") ||
+                s.contains("ï")) {
+            s = new String(s.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        }
         return s;
     }
 
