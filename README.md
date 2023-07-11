@@ -122,6 +122,59 @@ maxCount：最大返回值，返回结果里面 list 最大数量。 最大值10
 ~~~
 
 
+# 安装和启动
+
+## 使用docker进行启动
+
+
+
+### 镜像获取（二选一）
+
+docker中央仓库拉取
+
+
+~~~sh
+# 注：需要自行安装docker环境
+
+# 拉取git仓库
+docker pull leosam1024/tvbox-mv:latest
+~~~
+
+本地构建docker镜像
+
+~~~sh
+# 注：需要自行安装git和docker环境
+
+# 拉取git仓库
+git clone https://github.com/leosam1024/tvbox-mv.git
+
+# 进入仓库
+cd tvbox-mv
+
+# 构建docker镜像
+docker build ./ -t leosam1024/tvbox-mv:latest
+~~~
+
+### 启动
+
+~~~sh
+# 运行docker镜像（前台运行）
+docker run -p 7777:7777  leosam1024/tvbox-mv:latest
+
+# 运行docker镜像（后台运行）
+docker run -dit --restart always -p 8898:7777 leosam1024/tvbox-mv:latest
+
+# 运行docker镜像（后台运行+指定容器名称） -- 推荐
+docker run -dit --name tvbox-mv --hostname tvbox-mv --restart always -p 7777:7777 leosam1024/tvbox-mv:latest
+
+# 运行docker镜像（后台运行+指定容器名称+自定义数据）
+docker run -dit --name tvbox-mv --hostname tvbox-mv --restart always -p 7777:7777 -v /opt/mv/data:/app/data leosam1024/tvbox-mv:latest
+
+# 如果再次构建运行的时候，出现说container冲突的话,删除container对应的的ID就行
+docker rm container对应的的ID
+~~~
+
+
 ## 感谢
 ### 直播MV来源：
 小武哥 ：https://t.me/BoBaiBroo

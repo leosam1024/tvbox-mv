@@ -9,7 +9,9 @@
 
 	<description>Demo project for Spring Boot</description>
 	<properties>
-		<java.version>17</java.version>
+		<java.version>11</java.version>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
 
 		<project.encoding>UTF-8</project.encoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -116,9 +118,6 @@
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>${maven-compiler-plugin.version}</version>
-				<configuration>
-					<release>17</release>
-				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
