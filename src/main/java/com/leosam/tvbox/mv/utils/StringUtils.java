@@ -60,7 +60,12 @@ public class StringUtils {
                 s.contains("ï")) {
             s = new String(s.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
         }
-        s = s.replace('/', ' ')
+        s = s
+                .replace('（', ' ')
+                .replace('）', ' ')
+                .replace('(', ' ')
+                .replace(')', ' ')
+                .replace('/', ' ')
                 .replace('[', ' ')
                 .replace(']', ' ')
                 .trim();
