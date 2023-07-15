@@ -99,6 +99,7 @@ maxCount：最大返回值，返回结果里面 list 最大数量。 最大值10
 
 # TvBox配置
 ~~~ json
+// 示例
 {
   "sites": [
     {
@@ -119,6 +120,31 @@ maxCount：最大返回值，返回结果里面 list 最大数量。 最大值10
       "filterable": 1
     }
   ]
+}
+
+// 已有接口-任选其一即可
+{
+  "sites": [
+    {
+      "key": "MV_vod",
+      "name": "🎸┃明星-接口1┃MV",
+      "type": 1,
+      "api": "https://tvbox-mv--leosam2048.repl.co/mv/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    }, {
+      "key": "MV_vod",
+      "name": "🎸┃明星-接口2┃MV",
+      "type": 1,
+      "api": "https://mv.饭太硬.ml/mv/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    }
+  ]
+}
+
 ~~~
 
 

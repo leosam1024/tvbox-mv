@@ -46,11 +46,6 @@ public class StringUtils {
     }
 
     public static String cleanString(String s) {
-        s = s.replace('（', '(')
-                .replace('）', ')')
-                .replace('/', '_')
-                .replace(']', '_')
-        ;
         // 去除乱码 以ISO8859-1方式读取UTF-8编码的中文
         if (s.contains("ç") ||
                 s.contains("å") ||
@@ -65,6 +60,10 @@ public class StringUtils {
                 s.contains("ï")) {
             s = new String(s.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
         }
+        s = s.replace('/', ' ')
+                .replace('[', ' ')
+                .replace(']', ' ')
+                .trim();
         return s;
     }
 
