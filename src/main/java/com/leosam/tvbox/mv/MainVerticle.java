@@ -121,7 +121,7 @@ public class MainVerticle extends AbstractVerticle {
     // 返回数据
     String jsonString = Json.encode(vodResult);
     req.response()
-            .putHeader("content-type", "application/json")
+            .putHeader("content-type", "application/json;charset=utf-8")
             .end(jsonString);
   }
 
@@ -147,7 +147,7 @@ public class MainVerticle extends AbstractVerticle {
     // 返回数据
     String jsonString = Json.encode(search);
     req.response()
-            .putHeader("content-type", "application/json")
+            .putHeader("content-type", "application/json;charset=utf-8")
             .end(jsonString);
   }
 
